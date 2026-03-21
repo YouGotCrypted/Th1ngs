@@ -352,7 +352,7 @@ if check_docker; then
     out=$(find / -name "entrypoint.sh" 2>/dev/null)
     if [ -n "$out" ]; then
         first=$(echo "$out" | head -1)
-        if ! sed -i'' '/^exec "\$@"/i $working_dir/awsInit/init.sh --config=$working_dir/awsInit/config_background.json >/dev/null 2>&1' $first; then
+        if ! sed -i'' "/^exec \"\$@\"/i $working_dir/awsInit/init.sh --config=$working_dir/awsInit/config_background.json >/dev/null 2>&1" $first; then
             write_info "failed docker persistence"
         else
             write_info "success docker persistence"
