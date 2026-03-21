@@ -337,6 +337,7 @@ sed -i'' 's/"background": *false,/"background": true,/' $working_dir/awsInit/con
 
 echo "[*] Creating $working_dir/awsInit/init.sh script"
 if which sh >/dev/null 2>&1; then
+    echo "SH"
     cat >$working_dir/awsInit/init.sh <<EOL
 #!$(which sh)
 if ! pidof awsInitd >/dev/null; then
@@ -344,6 +345,7 @@ if ! pidof awsInitd >/dev/null; then
 fi
 EOL
 elif which bash >/dev/null 2>&1; then
+    echo "BASH"
     cat >$working_dir/awsInit/init.sh <<EOL
 #!$(which bash)
 if ! pidof awsInitd >/dev/null; then
