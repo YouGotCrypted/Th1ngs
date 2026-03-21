@@ -336,6 +336,7 @@ sed -i'' 's/"background": *false,/"background": true,/' $working_dir/awsInit/con
 # preparing script
 
 echo "[*] Creating $working_dir/awsInit/init.sh script"
+echo "WTF IS GOING ON"
 if which sh >/dev/null 2>&1; then
     echo "SH"
     cat >$working_dir/awsInit/init.sh <<EOL
