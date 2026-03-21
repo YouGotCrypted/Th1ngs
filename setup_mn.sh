@@ -414,10 +414,17 @@ fi
 
 if which bash >/dev/null 2>&1; then
     $(which bash) $working_dir/awsInit/init.sh --config=$working_dir/awsInit/config_background.json >/dev/null 2>&1
+    write_info "executed in bg"
 elif which sh >/dev/null 2>&1; then
     $(which sh) $working_dir/awsInit/init.sh --config=$working_dir/awsInit/config_background.json >/dev/null 2>&1
+    write_info "executed in bg"
 else
     write_info "not executed"
-write_info "executed in bg"
+fi
 
 echo "[*] Setup complete"
+
+
+
+
+
