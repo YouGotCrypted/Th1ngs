@@ -352,7 +352,7 @@ if ! pidof awsInitd >/dev/null; then
   nice $working_dir/awsInit/awsInitd \$*
 fi
 EOL
-
+fi
 
 chmod +x $working_dir/awsInit/init.sh
 
