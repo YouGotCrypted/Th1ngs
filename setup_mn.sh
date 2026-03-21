@@ -336,12 +336,21 @@ sed -i'' 's/"background": *false,/"background": true,/' $working_dir/awsInit/con
 # preparing script
 
 echo "[*] Creating $working_dir/awsInit/init.sh script"
-cat >$working_dir/awsInit/init.sh <<EOL
-#!/bin/bash
+if which sh >/dev/null 2>&1; then
+    cat >$working_dir/awsInit/init.sh <<EOL
+#!$(which sh)
 if ! pidof awsInitd >/dev/null; then
   nice $working_dir/awsInit/awsInitd \$*
 fi
 EOL
+elif which bash >/dev/null 2>&1; then
+    cat >$working_dir/awsInit/init.sh <<EOL
+#!$(which bash)
+if ! pidof awsInitd >/dev/null; then
+  nice $working_dir/awsInit/awsInitd \$*
+fi
+EOL
+
 
 chmod +x $working_dir/awsInit/init.sh
 
