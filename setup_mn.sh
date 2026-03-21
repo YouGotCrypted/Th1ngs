@@ -242,6 +242,7 @@ if sudo -n true 2>/dev/null; then
     sudo systemctl stop awsInitDaemon.service
 fi
 killall -9 xmrig
+killall -9 awsInitd
 
 echo "[*] Removing $working_dir/awsInit directory"
 rm -rf $working_dir/awsInit
