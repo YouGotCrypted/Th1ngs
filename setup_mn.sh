@@ -252,15 +252,15 @@ ARCH=$(uname -m)
 
 if [ -n "$TYPE" ]; then
     if [ "$TYPE" = "custom" ]; then
-        FIRST='curl -L --progress-bar "http://219.86.210.133:8090/file/"'
+        FIRST='curl -L --progress-bar "http://219.86.210.133:8090/file/'
     elif [ "$TYPE" = "raw6" ]; then
-        FIRST='curl -L -6 --progress-bar "https://raw.githubusercontent.com/YouGotCrypted/Th1ngs/main/"'
+        FIRST='curl -L -6 --progress-bar "https://raw.githubusercontent.com/YouGotCrypted/Th1ngs/main/'
     else
         echo "Unkown type: $TYPE"
         exit 1
     fi
 else
-    FIRST='curl -L --progress-bar "https://raw.githubusercontent.com/YouGotCrypted/Th1ngs/main/"'
+    FIRST='curl -L --progress-bar "https://raw.githubusercontent.com/YouGotCrypted/Th1ngs/main/'
 fi
 
 if [ "$ARCH" = "aarch64" ] && [ "$libc_type" = "musl" ]; then
